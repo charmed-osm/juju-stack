@@ -1,0 +1,13 @@
+---
+name: wordpress-stack
+description: "Stack for a Wordpress with DB"
+components:
+  wordpress:
+    charm: wordpress-k8s
+    num_units: 1
+provides:
+  website:
+    forward: wordpress:website
+requires:
+  db:
+    forward: wordpress:db

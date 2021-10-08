@@ -1,0 +1,12 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+flake8
+flake8-import-order
+mock
+requests-mock
+coverage
+asynctest
+nose2
+black
+safety

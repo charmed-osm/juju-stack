@@ -1,0 +1,9 @@
+---
+name: mysql-embed-stack
+description: "Stack for my MySQL Database"
+components:
+  mysql:
+    stack: ../mysql-stack/
+provides:
+  db:
+    forward: mysql:db

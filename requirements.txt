@@ -1,0 +1,6 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
+click==8.0.1
+    # via -r requirements.in
+pyyaml==5.4.1
+    # via -r requirements.in

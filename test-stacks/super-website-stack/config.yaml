@@ -1,0 +1,8 @@
+# default-model:
+components:
+  db:
+    model: db
+  wp:
+    model: wp
+  wp2:
+    model: wp

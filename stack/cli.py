@@ -51,10 +51,13 @@ def cli():
 @click.command(options_metavar="[options]")
 @click.argument("stack_path", metavar="<stack_path>")
 @click.argument("instance_name", metavar="[<instance_name>]")
+@click.option(
+    "--config", "-c", metavar="<path_to_config>", help="Path to the config.yaml"
+)
 @debug_option
-def deploy(stack_path: str, instance_name: str):
+def deploy(stack_path: str, instance_name: str, config_path: str):
     """
-    Summary: Deploys a new stack.
+    Deploys a new stack instance.
 
     Arguments:
 
@@ -64,10 +67,8 @@ def deploy(stack_path: str, instance_name: str):
     """
     logger.debug("Deploying stack")
     current_model = get_current_model()
-    stack_data, stack_config = (
-        load_stack_data(stack_path),
-        load_stack_config(stack_path) or {},
-    )
+    stack_data = load_stack_data(stack_path)
+    stack_config = load_stack_config(config_path) if config_path else {}
     instance_name = instance_name or stack_data["name"]
     if instance_exists(instance_name):
         logging.error(
@@ -92,7 +93,7 @@ def deploy(stack_path: str, instance_name: str):
 @click.command(options_metavar="[options]")
 @debug_option
 def list():
-    """List stack instances"""
+    """List stack instances."""
     instances = load_instances()
     stacks_info = "Stack instances:\n\n"
     for instance_name, instance_data in instances.items():
@@ -113,7 +114,7 @@ def list():
 @click.argument("stack_name", metavar="<stack_name>")
 @debug_option
 def show(stack_name):
-    """List stack instances"""
+    """Show content of a stack."""
     stack = load_stack(stack_name)
     stack = (
         yaml.dump(stack) if stack else "No stack found with name {}".format(stack_name)
@@ -129,7 +130,7 @@ def show(stack_name):
 @debug_option
 def destroy(stack_instance, force, no_wait, destroy_storage):
     """
-    Summary: Destroys a stack instance.
+    Destroys a stack instance.
 
     Arguments:
 
@@ -151,7 +152,7 @@ def destroy(stack_instance, force, no_wait, destroy_storage):
 @debug_option
 def status(stack_instance):
     """
-    Summary: Get the status of a stack instance.
+    Get the status of a stack instance.
 
     Arguments:
 
@@ -172,7 +173,7 @@ def status(stack_instance):
 @debug_option
 def unregister(stack_instance):
     """
-    Summary: Unregister a stack instance.
+    Unregister a stack instance.
 
     Arguments:
 

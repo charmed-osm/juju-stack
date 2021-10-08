@@ -26,7 +26,7 @@ def load_stack_config(
     stack_path: str,
 ) -> dict:
     """Load the Stack Config file of a specific Stack"""
-    filename = "{}/config.yaml".format(stack_path)
+    filename = "{}".format(stack_path)
     if not os.path.isfile(filename):
         return None
 

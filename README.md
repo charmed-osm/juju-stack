@@ -17,10 +17,18 @@ git clone https://github.com/davigar15/juju-stack
 cd juju-stack/
 
 # Install juju-stack
+sudo apt update && sudo apt install python3-pip -y
 python3 -m pip install .
 ```
 
 Execute `juju-stack --help` to discover all the commands that the tool provides.
+
+> Note: Make sure $HOME/.local/bin is included in your PATH.
+>
+> ```bash
+> $ echo PATH=$PATH:$HOME/.local/bin | tee -a ~/.bashrc
+> $ source ~/.bashrc
+> ```
 
 ## Example
 
@@ -31,7 +39,7 @@ First of all, we need to setup the Kubernetes cluster and bootstrap a Juju contr
 The prefered Kubernetes is Microk8s:
 
 ```bash
-sudo snap install microk8s --classic
+sudo snap install microk8s --classic --channel 1.21/stable
 sudo usermod -a -G microk8s `whoami`
 sudo chown -f -R `whoami` ~/.kube
 newgrp microk8s
@@ -79,7 +87,7 @@ juju-stack status super-website
 # (Required) The name of the stack
 name: <name>
 
-# (Required) Short description of the stack
+# (Optional) Short description of the stack
 description: <description>
 
 # (Required) A list of components that are part of the current stack.
@@ -98,10 +106,12 @@ components:
 
     # The following keys are optional and only valid for charm-type components
 
-    # (Optional) Number of units for the application
+    # (Optional) Number of units of the application
     num_units: <num_units>
 
-    # (Optional) Charm's key=value configuration. The charm configuration options available are particular for each individual charm. See `config.yaml` file in the charm.
+    # (Optional) Charm's key=value configuration.
+    # The charm configuration options available are particular for each individual charm.
+    # See `config.yaml` file in the charm.
     #
     # Example:
     #   config:
@@ -113,20 +123,20 @@ components:
 # These endpoints can be used to form relations by stacks that will include the current stack as a component.
 provides:
   <provides endpoint name>:
-    # (Required) Target endpoint of the provided endpoint.
-    # It points to the actual component endpoint for the provided endpoint.
+    # (Required) Target endpoint of the provides.
+    # It points to the actual component endpoint for the provides.
     #  <component name>: Name of the component in the current stack
     #  <endpoint name>: Name of the endpoint in the selected component
     #
     # Example:
     #   name: my-stack
     #   components:
-    #     mysql:
+    #     database:
     #       charm: ch:charmed-osm-mariadb-k8s
     #     wordpress:
     #       charm: ch:wordpress-k8s
     #   provides:
-    #     forward: mysql:mysql
+    #     forward: database:mysql  # where `mysql` is the endpoint in the `database` component.
     #
     # Note: A `provides` endpoint can forward an endpoint of a stack, that itself forwards to a charm endpoint.
     forward: <component name>:<endpoint name>
@@ -135,7 +145,9 @@ provides:
 # These endpoints can be used to form relations by stacks that will include the current stack as a component.
 requires:
   <requires endpoint name>:
-    # (Required) Target endpoint of the required endpoint. It points to the actual component endpoint for the required endpoint. Same mechanism as in `provides:`.
+    # (Required) Target endpoint of the requires.
+    #  It points to the actual component endpoint for the requires.
+    # Same mechanism as in `provides:`.
     forward: <component name>:<endpoint name>
 
 # (Optional) A list of the relations in the stack
@@ -145,6 +157,32 @@ relations:
 
     # (Required) Requirer endpoint of a component in this stack
     requirer: <component name>:<endpoint name>
+```
+
+### Config specification
+
+The `juju-stack deploy` command has the `--config <path_to_config>` option to set a configuration file that will be used at instantiation.
+
+The main purpose of this file is to distribute the a stack across models. By default, the whole stack will be deployed in the current model. Optionally, the config file can be used to place `sub-stacks` in different models.
+
+This is the config file specification:
+
+```yaml
+components:
+  # (Optional) Component name to which the config inside should be applied to.
+  # To select components that are inside a stack component, use "." to join the two (or more)
+  # components.
+  #
+  # Example:
+  #   components:
+  #     db: {...}
+  #     lma.prometheus: {...}
+  <component name>:
+    # (Optional) Model name to which the component will be deployed.
+    # This option is only available for a stack component.
+    # The model set to a stack gets, by default, inherited by its child components,
+    # unless specified by another configuration in the config file.
+    model: <model name>
 ```
 
 ## Develop

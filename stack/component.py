@@ -134,7 +134,7 @@ class StackData(dict):
     @property
     def description(self) -> str:
         """Returns the description of the stack"""
-        return self["description"]
+        return self.get("description", "")
 
     @property
     def components(self) -> Dict[str, Any]:

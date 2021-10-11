@@ -2,6 +2,7 @@
 # See LICENSE file for licensing details.
 """ Module in charge of handling stack files """
 import os
+import subprocess
 from typing import Any, Dict
 
 import yaml
@@ -34,6 +35,14 @@ def load_stack_config(
 
     with open(filename) as file_stream:
         return yaml.safe_load(file_stream)
+
+
+def create_stacks_file():
+    home = os.getenv("HOME")
+    juju_folder = "{}/.local/share/juju".format(home)
+    filename = "{}/stacks.yaml".format(juju_folder)
+    subprocess.run(["mkdir", "-p", juju_folder], check=True)
+    subprocess.run(["touch", filename], check=True)
 
 
 def load_stacks_file() -> dict:

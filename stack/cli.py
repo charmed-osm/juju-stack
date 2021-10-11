@@ -6,6 +6,7 @@ This module takes care of the juju-stack CLI commands.
 For more information, execute `juju-stack --help`
 """
 
+from click.decorators import help_option
 from functools import wraps
 import logging
 
@@ -14,6 +15,7 @@ from stack import juju
 from stack.component import Stack
 from stack.config import Config
 from stack.files import (
+    create_stacks_file,
     instance_exists,
     load_instances,
     load_stack,
@@ -45,7 +47,7 @@ def debug_option(f):
 
 @click.group()
 def cli():
-    pass
+    create_stacks_file()
 
 
 @click.command(options_metavar="[options]")
@@ -149,8 +151,9 @@ def destroy(stack_instance, force, no_wait, destroy_storage):
 
 @click.command(options_metavar="[options]")
 @click.argument("stack_instance", metavar="<stack_instance>")
+@click.option("--model", "-m", metavar="<model>", help="Show the juju status of only one model")
 @debug_option
-def status(stack_instance):
+def status(stack_instance, model):
     """
     Get the status of a stack instance.
 
@@ -164,7 +167,7 @@ def status(stack_instance):
     if stack_instance not in instances:
         logger.error("Stack instance {} does not exist.".format(stack_instance))
         return
-    status = juju.status(stack_instance, instances[stack_instance])
+    status = juju.status(stack_instance, instances[stack_instance], model=model)
     logger.info(status)
 
 

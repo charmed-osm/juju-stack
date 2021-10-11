@@ -4,7 +4,7 @@ import subprocess
 import time
 from typing import Any, Dict, NoReturn
 
-from stack import files
+from stack import STACK_SEPARATOR, STACK_SEPARATOR_REPR, files
 from stack.component import ResourceType, Stack
 from stack.config import Config
 import yaml
@@ -82,13 +82,25 @@ def destroy_stack(
             removed_instance[model_name][ResourceType.CHARM.value].append(charm)
 
 
-def status(instance_name: str, instance: Dict[str, Any]) -> str:
+def status(instance_name: str, instance: Dict[str, Any], model: str = None) -> str:
     """
     Get the status of a stack instance
 
     Args:
+        instance_name: Stack instance name
         instance: Data with the resources of the stack
+        model: Model name
     """
+    if model:
+        return (
+            subprocess.run(
+                ["juju", "status", "--color", "-m", model, "{}*".format(instance_name)],
+                capture_output=True,
+                check=True,
+            )
+            .stdout.decode("utf-8")
+            .replace(STACK_SEPARATOR, STACK_SEPARATOR_REPR)
+        )
     stack = files.load_stack(instance["stack-name"])
     num_charms = 0
     active_charms = 0
@@ -190,7 +202,7 @@ def status(instance_name: str, instance: Dict[str, Any]) -> str:
             "Summary": [
                 {"Name": stack["name"]},
                 {"Status": stack_status},
-                {"Description": stack["description"]},
+                {"Description": stack.get("description")},
                 {"Models": ", ".join(instance["resources"].keys())},
                 {"Applications": num_charms},
                 {"Active applications": "{}/{}".format(active_charms, num_charms)},

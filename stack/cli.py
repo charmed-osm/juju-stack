@@ -55,7 +55,7 @@ def cli():
     "--config", "-c", metavar="<path_to_config>", help="Path to the config.yaml"
 )
 @debug_option
-def deploy(stack_path: str, instance_name: str, config_path: str):
+def deploy(stack_path: str, instance_name: str, config: str):
     """
     Deploys a new stack instance.
 
@@ -68,7 +68,7 @@ def deploy(stack_path: str, instance_name: str, config_path: str):
     logger.debug("Deploying stack")
     current_model = get_current_model()
     stack_data = load_stack_data(stack_path)
-    stack_config = load_stack_config(config_path) if config_path else {}
+    stack_config = load_stack_config(config) if config else {}
     instance_name = instance_name or stack_data["name"]
     if instance_exists(instance_name):
         logging.error(

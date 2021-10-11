@@ -1,3 +1,5 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
 import subprocess
 import time
 from typing import Any, Dict, NoReturn

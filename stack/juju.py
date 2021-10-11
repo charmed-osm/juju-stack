@@ -4,9 +4,10 @@ import subprocess
 import time
 from typing import Any, Dict, NoReturn
 
-from stack import STACK_SEPARATOR, STACK_SEPARATOR_REPR, files
+from stack import STACK_SEPARATOR, STACK_SEPARATOR_REPR
 from stack.component import ResourceType, Stack
 from stack.config import Config
+from stack.files import load_stack
 import yaml
 
 
@@ -101,7 +102,7 @@ def status(instance_name: str, instance: Dict[str, Any], model: str = None) -> s
             .stdout.decode("utf-8")
             .replace(STACK_SEPARATOR, STACK_SEPARATOR_REPR)
         )
-    stack = files.load_stack(instance["stack-name"])
+    stack = load_stack(instance["stack-name"])
     num_charms = 0
     active_charms = 0
     models = []

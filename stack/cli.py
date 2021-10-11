@@ -6,7 +6,6 @@ This module takes care of the juju-stack CLI commands.
 For more information, execute `juju-stack --help`
 """
 
-from click.decorators import help_option
 from functools import wraps
 import logging
 
@@ -151,7 +150,9 @@ def destroy(stack_instance, force, no_wait, destroy_storage):
 
 @click.command(options_metavar="[options]")
 @click.argument("stack_instance", metavar="<stack_instance>")
-@click.option("--model", "-m", metavar="<model>", help="Show the juju status of only one model")
+@click.option(
+    "--model", "-m", metavar="<model>", help="Show the juju status of only one model"
+)
 @debug_option
 def status(stack_instance, model):
     """

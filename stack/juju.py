@@ -94,7 +94,6 @@ def status(instance_name: str, instance: Dict[str, Any]) -> str:
     cmr = []
     stack_status = "active"
     for model_name, resources in instance["resources"].items():
-        num_charms += len(resources["charms"])
         juju_status = yaml.safe_load(
             subprocess.run(
                 [
@@ -122,6 +121,7 @@ def status(instance_name: str, instance: Dict[str, Any]) -> str:
                     )
         applications = []
         for application_name, application_data in juju_status["applications"].items():
+            num_charms += 1
             units = []
             active = True
             for unit_name, unit_data in application_data["units"].items():

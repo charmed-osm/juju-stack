@@ -1,5 +1,6 @@
 <!-- Copyright 2021 Canonical Ltd.
 See LICENSE file for licensing details. -->
+
 # juju-stack
 
 ## Quickstart
@@ -86,7 +87,9 @@ description: <description>
 components:
   <component name>:
     # (Required) Path of the component.
-    # The <component type> has two possible values, `stack` if the component is a stack, and `charm` if the component if a charm.
+    # The <component type> has two possible values:
+    #  - `stack` if the component is a stack
+    #  - `charm` if the component if a charm.
     #
     # Example:
     #   stack: ./path/to/the/stack
@@ -110,7 +113,8 @@ components:
 # These endpoints can be used to form relations by stacks that will include the current stack as a component.
 provides:
   <provides endpoint name>:
-    # (Required) Target endpoint of the provided endpoint. It points to the actual component endpoint for the provided endpoint.
+    # (Required) Target endpoint of the provided endpoint.
+    # It points to the actual component endpoint for the provided endpoint.
     #  <component name>: Name of the component in the current stack
     #  <endpoint name>: Name of the endpoint in the selected component
     #
@@ -138,6 +142,7 @@ requires:
 relations:
   - # (Required) Provider endpoint of a component in this stack
     provider: <component name>:<endpoint name>
+
     # (Required) Requirer endpoint of a component in this stack
     requirer: <component name>:<endpoint name>
 ```

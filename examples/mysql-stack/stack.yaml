@@ -1,3 +1,5 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
 ---
 name: mysql-stack
 description: "Stack for my MySQL Database"

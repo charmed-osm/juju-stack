@@ -1,3 +1,5 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
 from typing import Dict, NoReturn
 
 from stack import STACK_SEPARATOR, STACK_SEPARATOR_REPR

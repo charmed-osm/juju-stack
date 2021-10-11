@@ -1,3 +1,5 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
 """ Module in charge of handling stack files """
 import os
 from typing import Any, Dict

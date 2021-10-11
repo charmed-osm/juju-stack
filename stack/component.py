@@ -1,3 +1,5 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
 from enum import Enum
 import subprocess
 from typing import Any, Dict, List, NoReturn

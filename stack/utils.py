@@ -1,3 +1,5 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
 from typing import Any, Dict, Tuple
 
 from stack import files

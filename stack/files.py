@@ -83,7 +83,13 @@ def write_new_stacks_in_file(new_stacks: dict):
     write_stacks_file(stacks)
 
 
-def write_new_instance_in_file(stack_name: str, name: str, resources: Dict[str, Any]):
+def write_new_instance_in_file(
+    stack_name: str,
+    name: str,
+    resources: Dict[str, Any],
+    fullstack: Dict[str, Any],
+    config,
+):
     """Write a new Stack in the local Stacks file"""
     stacks = load_stacks_file()
     if stacks is None:
@@ -91,7 +97,12 @@ def write_new_instance_in_file(stack_name: str, name: str, resources: Dict[str, 
     if "instances" not in stacks:
         stacks["instances"] = {}
 
-    stacks["instances"][name] = {"stack-name": stack_name, "resources": resources}
+    stacks["instances"][name] = {
+        "stack-name": stack_name,
+        "resources": resources,
+        "fullstack": fullstack,
+        "config": config,
+    }
 
     write_stacks_file(stacks)
 

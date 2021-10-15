@@ -10,24 +10,21 @@ from functools import wraps
 import logging
 
 import click
-from stack import juju
+from stack import CHARMHUB_CHANNELS, juju, StackData
+from stack.charmhub import CharmHub
 from stack.component import Stack
 from stack.config import Config
 from stack.files import (
-    create_stacks_file,
     instance_exists,
     load_instances,
     load_stack,
     load_stack_config,
-    load_stack_data,
     remove_instance,
 )
 from stack.utils import (
-    find_stacks,
     get_current_model,
-    register_instance,
-    register_stacks,
 )
+from tabulate import tabulate
 import yaml
 
 logger = logging.getLogger()
@@ -46,17 +43,21 @@ def debug_option(f):
 
 @click.group()
 def cli():
-    create_stacks_file()
+    juju.initialize()
+    CharmHub.initialize()
 
 
 @click.command(options_metavar="[options]")
-@click.argument("stack_path", metavar="<stack_path>")
-@click.argument("instance_name", metavar="[<instance_name>]")
+@click.argument("stack_uri", metavar="<stack_uri>")
+@click.argument("instance_name", metavar="<instance_name>")
 @click.option(
     "--config", "-c", metavar="<path_to_config>", help="Path to the config.yaml"
 )
+@click.option(
+    "--channel", metavar="<channel>", default="stable", help="The channel of the stack."
+)
 @debug_option
-def deploy(stack_path: str, instance_name: str, config: str):
+def deploy(stack_uri: str, instance_name: str, config: str, channel: str):
     """
     Deploys a new stack instance.
 
@@ -68,26 +69,36 @@ def deploy(stack_path: str, instance_name: str, config: str):
     """
     logger.debug("Deploying stack")
     current_model = get_current_model()
-    stack_data = load_stack_data(stack_path)
+
+    stack_data = None
+    if stack_uri.startswith(".") or "/" in stack_uri:
+        # Local stack
+        if not CharmHub._valid_path(stack_uri):
+            raise Exception("Not stack.yaml found in path {}.".format(stack_uri))
+        data = CharmHub._load_stack_yaml(stack_uri)
+        stack_data = StackData(data)
+    else:
+        if channel not in CHARMHUB_CHANNELS:
+            raise Exception("channel `{}` is not valid".format(channel))
+        if not CharmHub.is_channel_active(stack_uri, channel):
+            raise Exception("no published stack in channel `{}`".format(channel))
+        stack_data = CharmHub.get_stack(stack_uri, channel)
     stack_config = load_stack_config(config) if config else {}
-    instance_name = instance_name or stack_data["name"]
+    instance_name = instance_name or stack_uri
     if instance_exists(instance_name):
         logging.error(
             "A stack instance with the name {} already exists".format(instance_name)
         )
         return
-    # Store the stacks
-    stacks = find_stacks(stack_path)
-    register_stacks(stacks)
-    # Load stack, its config, and deploy
-    stack = Stack(stack_data["name"])
+
+    stack = Stack(stack_data)
     config = Config(
         stack_config,
-        default_model=current_model,
+        current_model=current_model,
     )
-    info = juju.deploy_stack(stack, config, instance_name=instance_name)
-    logger.debug("Deployed resources: {}".format(info))
-    register_instance(stack_data["name"], instance_name, info)
+    dict(stack)
+
+    juju.deploy_stack(stack, config, instance_name=instance_name)
     logger.info("Stack successfully deployed")
 
 
@@ -168,8 +179,69 @@ def status(stack_instance, model):
     if stack_instance not in instances:
         logger.error("Stack instance {} does not exist.".format(stack_instance))
         return
-    status = juju.status(stack_instance, instances[stack_instance], model=model)
-    logger.info(status)
+    components, units, relations = juju.status(
+        stack_instance, instances[stack_instance], model=model
+    )
+    component_headers = ["Components", "Type", "Status"]
+    units_headers = [
+        "Stack name",
+        "Units",
+        "Workload",
+        "Agent",
+        "Message",
+        "Model",
+        # "Cloud/Region",
+        # "Controller",
+    ]
+    relations_headers = ["Relation provider", "Requirer"]
+    components_table = tabulate(
+        [
+            [
+                component_name,
+                components["type"],
+                components["status"],
+            ]
+            for component_name, components in components.items()
+        ],
+        headers=component_headers,
+        tablefmt="plain",
+        numalign="left",
+    )
+    unit_list = []
+    for stack_name, units in units.items():
+        for i, unit in enumerate(units):
+            unit_list.append(
+                [
+                    stack_name if not i else "",
+                    unit["unit"],
+                    unit["workload-status"],
+                    unit["agent-status"],
+                    unit["message"],
+                    unit["model"],
+                    # unit["cloud/region"],
+                    # unit["controller"],
+                ]
+            )
+    units_table = tabulate(
+        unit_list,
+        headers=units_headers,
+        tablefmt="plain",
+        numalign="left",
+    )
+    relations_table = tabulate(
+        [[relation["provider"], relation["requirer"]] for relation in relations],
+        headers=relations_headers,
+        tablefmt="plain",
+        numalign="left",
+    )
+    for line in components_table.splitlines():
+        logger.info(line)
+    logger.info("")
+    for line in units_table.splitlines():
+        logger.info(line)
+    logger.info("")
+    for line in relations_table.splitlines():
+        logger.info(line)
 
 
 @click.command(options_metavar="[options]")
@@ -201,9 +273,7 @@ def main():
         cli()
         exit(0)
     except Exception as e:
-        import traceback
-
-        print("failed: {} {}".format(e, traceback.format_exc()))
+        logger.error(e)
     exit(1)
 
 

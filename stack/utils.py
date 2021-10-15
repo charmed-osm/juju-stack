@@ -36,8 +36,10 @@ def register_stacks(stacks: Dict[str, Any]):
     files.write_new_stacks_in_file(stacks)
 
 
-def register_instance(stack_name: str, name: str, resources: Dict[str, Any]):
-    files.write_new_instance_in_file(stack_name, name, resources)
+def register_instance(
+    stack_name: str, name: str, resources: Dict[str, Any], fullstack: Dict, config
+):
+    files.write_new_instance_in_file(stack_name, name, resources, fullstack, config)
 
 
 def stack_instance_exist(name: str):

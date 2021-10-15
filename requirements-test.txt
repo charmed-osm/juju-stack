@@ -4,15 +4,15 @@ asynctest==0.13.0
     # via -r requirements-test.in
 black==21.9b0
     # via -r requirements-test.in
-certifi==2021.5.30
+certifi==2021.10.8
     # via requests
-charset-normalizer==2.0.6
+charset-normalizer==2.0.7
     # via requests
-click==8.0.1
+click==8.0.3
     # via
     #   black
     #   safety
-coverage==6.0
+coverage==6.0.2
     # via
     #   -r requirements-test.in
     #   nose2
@@ -20,9 +20,9 @@ dparse==0.5.1
     # via safety
 flake8-import-order==0.18.1
     # via -r requirements-test.in
-flake8==3.9.2
+flake8==4.0.1
     # via -r requirements-test.in
-idna==3.2
+idna==3.3
     # via requests
 mccabe==0.6.1
     # via flake8
@@ -40,17 +40,17 @@ pathspec==0.9.0
     # via black
 platformdirs==2.4.0
     # via black
-pycodestyle==2.7.0
+pycodestyle==2.8.0
     # via
     #   flake8
     #   flake8-import-order
-pyflakes==2.3.1
+pyflakes==2.4.0
     # via flake8
 pyparsing==2.4.7
     # via packaging
-pyyaml==5.4.1
+pyyaml==6.0
     # via dparse
-regex==2021.9.30
+regex==2021.10.8
     # via black
 requests-mock==1.9.3
     # via -r requirements-test.in

@@ -1,0 +1,33 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
+---
+name: lma
+description: "LMA stack with Alertmanager, Prometheus, Grafana, and Loki"
+components:
+  alertmanager:
+    charm: alertmanager-k8s
+    units: 1
+    trust: true
+    channel: edge
+  prometheus:
+    charm: prometheus-k8s
+    units: 1
+    trust: true
+    channel: edge
+  grafana:
+    charm: grafana-k8s
+    units: 1
+    trust: true
+    channel: edge
+  loki:
+    charm: loki-k8s
+    units: 1
+    trust: true
+    channel: edge
+relations:
+- requirer: prometheus:alertmanager
+  provider: alertmanager:alerting
+- provider: grafana:grafana-source
+  requirer: prometheus:grafana-source
+- provider: grafana:grafana-source
+  requirer: loki:grafana-source

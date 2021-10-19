@@ -1,8 +1,6 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
-# default-model:
+default-model: web
 components:
-  db:
-    model: database
-  wp:
-    model: wordpress
+  lma:
+    model: lma

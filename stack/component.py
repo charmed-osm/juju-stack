@@ -4,9 +4,9 @@ from enum import Enum
 import subprocess
 from typing import Any, Dict, List, NoReturn
 
-from stack import COMPONENT_TYPES, STACK_SEPARATOR
+from stack import COMPONENT_TYPES, STACK_SEPARATOR, StackData
+from stack.charmhub import CharmHub
 from stack.config import Config
-import stack.files as files
 
 
 class ResourceType(Enum):
@@ -118,50 +118,6 @@ class Plan:
         return self._info
 
 
-class StackData(dict):
-    """This class represents the data of a stack"""
-
-    def __init__(self, stack_name: str) -> NoReturn:
-        """
-        Args:
-            stack_name: Name of the stack to load
-        """
-        _stack_data = files.load_stack(stack_name)
-        for key, value in _stack_data.items():
-            self.__setitem__(key, value)
-        self.validate()
-
-    @property
-    def description(self) -> str:
-        """Returns the description of the stack"""
-        return self.get("description", "")
-
-    @property
-    def components(self) -> Dict[str, Any]:
-        """Returns a dictionary with the components name (key) and data (value)"""
-        return self["components"]
-
-    @property
-    def relations(self) -> List[Any]:
-        """Returns list of relations"""
-        return self["relations"] if "relations" in self else []
-
-    @property
-    def provides(self) -> Dict[str, Any]:
-        """Returns a dictionary with the provides endpoints"""
-        return self["provides"] if "provides" in self else {}
-
-    @property
-    def requires(self) -> Dict[str, Any]:
-        """Returns a dictionary with the requires endpoints"""
-        return self["requires"] if "requires" in self else {}
-
-    def validate(self) -> NoReturn:
-        """Validate the current stack data"""
-        # TODO: Implement validation of a stack
-        pass
-
-
 class Component:
     """
     This class represents a component
@@ -211,7 +167,7 @@ class Component:
         taking into account the hierarchy of components.
 
         Example:
-            my-stack.monitoring.prometheus
+            sitersite.lma
         """
         name = []
         component = self
@@ -244,20 +200,24 @@ class Charm(Component):
         self,
         uri: str,
         config: Dict[str, Any],
-        num_units: int = 1,
+        units: int = 1,
+        channel: bool = None,
+        trust: bool = False,
         parent: "Stack" = None,
     ) -> NoReturn:
         """
         Args:
             uri: Uri of the charm
             config: Config of the charm
-            num_units: The number of units of the charm
+            units: The number of units of the charm
             parent: Parent component of the charm. It must be a stack.
         """
         super().__init__(parent)
         self._uri = uri
         self._config = config
-        self._num_units = num_units
+        self._units = units
+        self._channel = channel
+        self._trust = trust
 
     @property
     def uri(self) -> str:
@@ -270,24 +230,44 @@ class Charm(Component):
         return self._config
 
     @property
-    def num_units(self) -> int:
+    def units(self) -> int:
         """Returns the number of units of the charm"""
-        return self._num_units
+        return self._units
+
+    @property
+    def trust(self) -> int:
+        """Returns if the charm is trusted or not"""
+        return self._trust
+
+    @property
+    def channel(self) -> int:
+        """Returns the channel of the charm"""
+        return self._channel
 
 
 class Stack(Component):
     def __init__(
         self,
-        stack_name: str,
+        stack_data: StackData,
         parent: "Stack" = None,
     ) -> NoReturn:
         super().__init__(parent)
-        self.stack_name = stack_name
-        self.data = StackData(stack_name)
+        self.stack_name = stack_data.name
+        self.data = stack_data
         self.description = self.data.description
         self._load_components()
         self._load_endpoints()
         self._load_relations()
+
+    def __iter__(self):
+        data = self.data.copy()
+        for component_name in self.data.components.keys():
+            if "stack" in data["components"][component_name]:
+                data["components"][component_name] = dict(
+                    self.components[component_name]
+                )
+        for key, value in data.items():
+            yield key, value
 
     def _load_components(self):
         _components = {}
@@ -298,12 +278,28 @@ class Stack(Component):
                     "`charm` or `stack` must be present in the component data"
                 )
             if matched_types[0] == "stack":
-                _components[name] = Stack(component_data["stack"], self)
+                stack_uri = component_data["stack"]
+                stack = None
+                if stack_uri.startswith(".") or "/" in stack_uri:
+                    # Local stack
+                    if not CharmHub._valid_path(stack_uri):
+                        raise Exception(
+                            "Not stack.yaml found in path {}.".format(stack_uri)
+                        )
+                    data = CharmHub._load_stack_yaml(stack_uri)
+                    stack = Stack(data, self)
+                else:
+                    channel = component_data.get("channel", "stable")
+                    data = CharmHub.get_stack(stack_uri, channel)
+                    stack = Stack(data, self)
+                _components[name] = stack
             else:
                 _components[name] = Charm(
                     component_data["charm"],
                     component_data.get("config", {}),
-                    component_data.get("num_units", 1),
+                    component_data.get("units", 1),
+                    component_data.get("channel"),
+                    component_data.get("trust", False),
                     self,
                 )
         self.components = _components
@@ -352,35 +348,43 @@ class Stack(Component):
 
     def get_plan(self, instance_name: str, config: Config):
         plan = Plan()
-        for component_name, component in self.components.items():
-            name = "{}{}{}".format(instance_name, STACK_SEPARATOR, component_name)
+        for _, component in self.components.items():
+            deployment_name = STACK_SEPARATOR.join([instance_name, component.name])
             if component.is_stack:
-                component_plan = component.get_plan(name, config)
+                component_plan = component.get_plan(instance_name, config)
                 for r in component_plan.resources:
                     plan.add_resource(r)
             else:
                 charm_resource = self.get_charm_resource(
-                    component, name, config.get_model(self.name)
+                    component, deployment_name, config.get_model(self.name)
                 )
                 plan.add_resource(charm_resource)
+
         for relation in self.relations:
             provider_model = config.get_model(relation.provider.component.name)
             requirer_model = config.get_model(relation.requirer.component.name)
-            provider_endpoint = "{}{}{}{}{}".format(
-                instance_name,
-                STACK_SEPARATOR,
-                relation.provider.component.name,
-                STACK_SEPARATOR,
-                relation.provider.endpoint,
+            provider_endpoint = (
+                STACK_SEPARATOR.join(
+                    [
+                        instance_name,
+                        relation.provider.component.name,
+                        relation.provider.endpoint,
+                    ]
+                )
+                if relation.provider.component.name
+                else STACK_SEPARATOR.join([instance_name, relation.provider.endpoint])
             )
-            requirer_endpoint = "{}{}{}{}{}".format(
-                instance_name,
-                STACK_SEPARATOR,
-                relation.requirer.component.name,
-                STACK_SEPARATOR,
-                relation.requirer.endpoint,
+            requirer_endpoint = (
+                STACK_SEPARATOR.join(
+                    [
+                        instance_name,
+                        relation.requirer.component.name,
+                        relation.requirer.endpoint,
+                    ]
+                )
+                if relation.requirer.component.name
+                else STACK_SEPARATOR.join([instance_name, relation.requirer.endpoint])
             )
-
             if provider_model != requirer_model:
                 # offer
                 offer_name = "{}{}{}{}{}".format(
@@ -423,10 +427,14 @@ class Stack(Component):
             charm.uri,
             name,
             "-n",
-            str(charm.num_units),
+            str(charm.units),
             "-m",
             model,
         ]
+        if charm.channel:
+            create_command.extend(["--channel", charm.channel])
+        if charm.trust:
+            create_command.append("--trust")
         for config_name, config_value in charm.config.items():
             create_command.append("--config")
             create_command.append("{}={}".format(config_name, config_value))

@@ -22,7 +22,7 @@ def get_version():
     return f"{LIBAPI}.{LIBPATCH}"
 
 
-install_requires = ["pyyaml", "click"]
+install_requires = ["pyyaml", "click", "tabulate"]
 
 setuptools.setup(
     name="stack",
@@ -34,7 +34,7 @@ setuptools.setup(
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     url="https://github.com/davigar15/juju-stack",
-    packages=["stack"],
+    packages=["stack", "stack.cli"],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3 :: Only",
@@ -51,6 +51,9 @@ setuptools.setup(
     python_requires=">=3.6",
     install_requires=install_requires,
     entry_points={
-        "console_scripts": ["juju-stack = stack.cli:main"],
+        "console_scripts": [
+            "juju-stack = stack.cli.juju:main",
+            "charmcraft-stack = stack.cli.charmcraft:main",
+        ],
     },
 )

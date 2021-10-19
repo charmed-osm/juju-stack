@@ -1,0 +1,11 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
+---
+name: website
+description: "Stack with mysql and wordpress"
+components:
+  site:
+    charm: hello-kubecon
+requires:
+  site-ingress:
+    forward: site:ingress

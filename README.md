@@ -54,31 +54,53 @@ sudo snap install juju --classic
 juju bootstrap microk8s
 ```
 
-The stack we will be deploying is called `super-website-stack`, which is composed by two other components. A component can be a charm, or another stack. In this case, the two components that compose the website are two stacks: `mysql-stack` and `wordpress-stack`.
-
-The reason why these two components are stacks, is because this example aims to showcase the ability of the stacks for deploying a multi-model scenario, being able to pass a configuration file to the deployment to place each component (stack) in a different model.
-
-Let's get prepared for the deployment creating two models:
+Change to the directory where the files for the examples live.
 
 ```bash
-juju add-model database   # model for mysql-stack
-juju add-model wordpress  # model for wordpress-stack
+cd examples/
 ```
 
-### juju-stack deploy
+In order to have a prototype that is extremely close to what it will look like when it is actually implemented in juju, we have included a `charmcraft-stack` command to publish the stacks to a mock CharmHub.
 
-Now let's deploy the stack with the following command:
+Let's register, upload and publish all the stacks.
 
 ```bash
-juju-stack deploy --config examples/super-website-config.yaml examples/super-website-stack super-website
+stacks="website lma website-lma"
+for stack in $stacks; do
+  charmcraft-stack register $stack
+  charmcraft-stack upload $stack/
+  charmcraft-stack release $stack
+done
 ```
 
-### juju-stack status
+The stack we will be deploying is called `web-lma-stack`, which is composed by two other components. A component can be a charm, or another stack. In this case, the two components that compose the website are two stacks: `website-stack` and `lma-stack`.
 
-The following command shows the status of the deployed stack instance.
+This example aims to showcase the ability of placing stacks in different models, by passing an instantiation file.
+
+First, we will deploy all the stack in one model.
 
 ```bash
-juju-stack status super-website
+juju add-model all-in-one
+juju-stack deploy website-lma supersite
+```
+
+Wait for the deployment to settle: `watch -c juju-stack status supersite`.
+
+Now we will deploy the same stack but with a configuration file, placing some components in different models.
+
+```bash
+juju add-model web
+juju add-model lma
+juju-stack deploy --config supersite.yaml website-lma d-supersite
+```
+
+Wait for the deployment to settle: `watch -c juju-stack status d-supersite`.
+
+To remove the deployments execute the following commands:
+
+```bash
+juju-stack destroy supersite
+juju-stack destroy d-supersite
 ```
 
 ## Stack specification
@@ -107,7 +129,13 @@ components:
     # The following keys are optional and only valid for charm-type components
 
     # (Optional) Number of units of the application
-    num_units: <num_units>
+    units: <units>
+
+    # (Optional) Whether the component is trusted or not
+    trust: <boolean>
+
+    # (Optional) Channel of the charm in CharmHub
+    channel: <channel>
 
     # (Optional) Charm's key=value configuration.
     # The charm configuration options available are particular for each individual charm.
@@ -168,6 +196,9 @@ The main purpose of this file is to distribute the a stack across models. By def
 This is the config file specification:
 
 ```yaml
+# (Optional) Default model for the deployment
+default-model: <default model>
+
 components:
   # (Optional) Component name to which the config inside should be applied to.
   # To select components that are inside a stack component, use "." to join the two (or more)

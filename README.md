@@ -91,7 +91,7 @@ Now we will deploy the same stack but with a configuration file, placing some co
 ```bash
 juju add-model web
 juju add-model lma
-juju-stack deploy --config supersite.yaml website-lma d-supersite
+juju-stack deploy --instance supersite.yaml website-lma d-supersite
 ```
 
 Wait for the deployment to settle: `watch -c juju-stack status d-supersite`.
@@ -187,9 +187,9 @@ relations:
     requirer: <component name>:<endpoint name>
 ```
 
-### Config specification
+### Instance specification
 
-The `juju-stack deploy` command has the `--config <path_to_config>` option to set a configuration file that will be used at instantiation.
+The `juju-stack deploy` command has the `--instance <path_to_instance_file>` option to set a configuration file that will be used at instantiation.
 
 The main purpose of this file is to distribute the a stack across models. By default, the whole stack will be deployed in the current model. Optionally, the config file can be used to place `sub-stacks` in different models.
 

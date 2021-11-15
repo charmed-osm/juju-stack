@@ -51,13 +51,13 @@ def cli():
 @click.argument("stack_uri", metavar="<stack_uri>")
 @click.argument("instance_name", metavar="<instance_name>")
 @click.option(
-    "--config", "-c", metavar="<path_to_config>", help="Path to the config.yaml"
+    "--instance", "-i", metavar="<instance_file>", help="Path to the instance file"
 )
 @click.option(
     "--channel", metavar="<channel>", default="stable", help="The channel of the stack."
 )
 @debug_option
-def deploy(stack_uri: str, instance_name: str, config: str, channel: str):
+def deploy(stack_uri: str, instance_name: str, instance: str, channel: str):
     """
     Deploys a new stack instance.
 
@@ -83,7 +83,7 @@ def deploy(stack_uri: str, instance_name: str, config: str, channel: str):
         if not CharmHub.is_channel_active(stack_uri, channel):
             raise Exception("no published stack in channel `{}`".format(channel))
         stack_data = CharmHub.get_stack(stack_uri, channel)
-    stack_config = load_stack_config(config) if config else {}
+    stack_config = load_stack_config(instance) if instance else {}
     instance_name = instance_name or stack_uri
     if instance_exists(instance_name):
         logging.error(
@@ -184,12 +184,12 @@ def status(stack_instance, model):
     )
     component_headers = ["Components", "Type", "Status"]
     units_headers = [
-        "Stack name",
+        "Stack",
         "Units",
         "Workload",
         "Agent",
-        "Message",
         "Model",
+        "Message",
         # "Cloud/Region",
         # "Controller",
     ]
@@ -216,8 +216,8 @@ def status(stack_instance, model):
                     unit["unit"],
                     unit["workload-status"],
                     unit["agent-status"],
-                    unit["message"],
                     unit["model"],
+                    unit["message"],
                     # unit["cloud/region"],
                     # unit["controller"],
                 ]

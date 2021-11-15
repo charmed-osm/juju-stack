@@ -236,11 +236,7 @@ def _get_units_and_relations(instance_name, instance, stack):
                                 "message": unit_data["workload-status"].get(
                                     "message", ""
                                 ),
-                                "model": "{} ({}/{})".format(
-                                    model,
-                                    _juju_status[model]["model"]["cloud"],
-                                    _juju_status[model]["model"]["region"],
-                                ),
+                                "model": model,
                             }
                         )
     if stack_components:

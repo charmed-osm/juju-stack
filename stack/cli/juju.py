@@ -179,15 +179,17 @@ def status(stack_instance, model):
     if stack_instance not in instances:
         logger.error("Stack instance {} does not exist.".format(stack_instance))
         return
-    components, units, relations = juju.status(
+    components, apps, relations = juju.status(
         stack_instance, instances[stack_instance], model=model
     )
     component_headers = ["Components", "Type", "Status"]
-    units_headers = [
+    apps_headers = [
         "Stack",
-        "Units",
-        "Workload",
-        "Agent",
+        "Application",
+        "Scale",
+        "Status",
+        # "Workload",
+        # "Agent",
         "Model",
         "Message",
         # "Cloud/Region",
@@ -207,24 +209,27 @@ def status(stack_instance, model):
         tablefmt="plain",
         numalign="left",
     )
-    unit_list = []
-    for stack_name, units in units.items():
-        for i, unit in enumerate(units):
-            unit_list.append(
+    app_list = []
+    for stack_name, apps in apps.items():
+        for i, app in enumerate(apps):
+            app_list.append(
                 [
                     stack_name if not i else "",
-                    unit["unit"],
-                    unit["workload-status"],
-                    unit["agent-status"],
-                    unit["model"],
-                    unit["message"],
+                    # unit["unit"],
+                    # unit["workload-status"],
+                    # unit["agent-status"],
+                    app["name"],
+                    app["scale"],
+                    app["status"],
+                    app["model"],
+                    app["message"],
                     # unit["cloud/region"],
                     # unit["controller"],
                 ]
             )
     units_table = tabulate(
-        unit_list,
-        headers=units_headers,
+        app_list,
+        headers=apps_headers,
         tablefmt="plain",
         numalign="left",
     )

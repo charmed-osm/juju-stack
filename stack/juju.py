@@ -169,8 +169,8 @@ def _get_relation_data(endpoint_component, endpoint_interface, stack_data):
 _juju_status = {}
 
 
-def _get_units_and_relations(instance_name, instance, stack):
-    units = {}
+def _get_apps_and_relations(instance_name, instance, stack):
+    apps = {}
     relations = []
     charm_components = {k: v for k, v in stack["components"].items() if "charm" in v}
     stack_components = {
@@ -197,7 +197,7 @@ def _get_units_and_relations(instance_name, instance, stack):
             }
         )
     if charm_components:
-        units[instance_name] = []
+        apps[instance_name] = []
         for charm_name in charm_components.keys():
             model = _get_model(instance_name, instance)
             if model not in _juju_status:
@@ -225,33 +225,30 @@ def _get_units_and_relations(instance_name, instance, stack):
                     application_name == charm_name
                     and ".".join(application_name_components) == instance_name
                 ):
-                    for unit_name, unit_data in application_data["units"].items():
-                        unit_name = unit_name.split(STACK_SEPARATOR)[-1]
-                        unit_status = unit_data["workload-status"]["current"]
-                        units[instance_name].append(
-                            {
-                                "unit": unit_name,
-                                "workload-status": unit_status,
-                                "agent-status": unit_data["juju-status"]["current"],
-                                "message": unit_data["workload-status"].get(
-                                    "message", ""
-                                ),
-                                "model": model,
-                            }
-                        )
+                    apps[instance_name].append(
+                        {
+                            "name": application_name,
+                            "scale": application_data["scale"],
+                            "status": application_data["application-status"]["current"],
+                            "message": application_data["application-status"].get(
+                                "message", ""
+                            ),
+                            "model": model,
+                        }
+                    )
     if stack_components:
         for stack_name, stack in stack_components.items():
             new_instance_name = "{}.{}".format(instance_name, stack_name)
-            child_units, child_relations = _get_units_and_relations(
+            child_units, child_relations = _get_apps_and_relations(
                 new_instance_name, instance, stack
             )
             relations.extend(child_relations)
             for s_name, data in child_units.items():
-                units[s_name] = data
-    return units, relations
+                apps[s_name] = data
+    return apps, relations
 
 
-def _update_components_status(instance_name, components, units):
+def _update_components_status(instance_name, components, apps):
     for component_name, component in components.items():
         full_name = (
             "{}.{}".format(instance_name, component_name)
@@ -259,7 +256,7 @@ def _update_components_status(instance_name, components, units):
             else instance_name
         )
         statuses = []
-        for stack_name, unit_list in units.items():
+        for stack_name, unit_list in apps.items():
             condition = False
             if full_name == instance_name:
                 condition = full_name == stack_name
@@ -270,7 +267,7 @@ def _update_components_status(instance_name, components, units):
                     condition = "{}".format(full_name) == stack_name
             if condition:
                 for units_data in unit_list:
-                    statuses.append(units_data["workload-status"])
+                    statuses.append(units_data["status"])
         if "error" in statuses:
             component["status"] = "error"
         elif "blocked" in statuses:
@@ -285,10 +282,10 @@ def _update_components_status(instance_name, components, units):
             component["status"] = "unknown"
 
         component["status"] = _get_status_with_color(component["status"])
-    for unit_list in units.values():
-        for unit in unit_list:
-            unit["agent-status"] = _get_status_with_color(unit["agent-status"])
-            unit["workload-status"] = _get_status_with_color(unit["workload-status"])
+    for app_list in apps.values():
+        for app in app_list:
+            app["status"] = _get_status_with_color(app["status"])
+            # unit["workload-status"] = _get_status_with_color(unit["workload-status"])
 
 
 def status(instance_name: str, instance: Dict[str, Any], model: str = None) -> Tuple:
@@ -307,10 +304,9 @@ def status(instance_name: str, instance: Dict[str, Any], model: str = None) -> T
         }
         for component_name, component in instance["fullstack"]["components"].items()
     }
-    units = {}
     relations = []
-    units, relations = _get_units_and_relations(
+    apps, relations = _get_apps_and_relations(
         instance_name, instance, instance["fullstack"]
     )
-    _update_components_status(instance_name, components, units)
-    return (components, units, relations)
+    _update_components_status(instance_name, components, apps)
+    return (components, apps, relations)

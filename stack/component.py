@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 from enum import Enum
 import subprocess
-from typing import Any, Dict, List, NoReturn
+from typing import Any, Dict, List
 
 from stack import COMPONENT_TYPES, STACK_SEPARATOR, StackData
 from stack.charmhub import CharmHub
@@ -29,7 +29,7 @@ class Resource:
         model: str,
         resource_type: ResourceType,
         create_command: List[str],
-    ) -> NoReturn:
+    ) -> None:
         """
         Args:
             resource_type: Type of the resource
@@ -60,7 +60,7 @@ class Resource:
         """Type of the resource"""
         return self._resource_type
 
-    def create(self) -> NoReturn:
+    def create(self) -> None:
         """
         Create the resource
 
@@ -82,7 +82,7 @@ class Plan:
     A Plan is represented by a list of resources that need to be created.
     """
 
-    def __init__(self) -> NoReturn:
+    def __init__(self) -> None:
         self._resources = []
         self._info = {}
 
@@ -95,7 +95,7 @@ class Plan:
         """Add resource to the plan"""
         self.resources.append(resource)
 
-    def deploy(self) -> NoReturn:
+    def deploy(self) -> None:
         """
         Deploy plan
 
@@ -128,7 +128,7 @@ class Component:
     def __init__(
         self,
         parent: "Component" = None,
-    ) -> NoReturn:
+    ) -> None:
         """
         Args:
             parent: Parent component of the current component.
@@ -204,7 +204,7 @@ class Charm(Component):
         channel: bool = None,
         trust: bool = False,
         parent: "Stack" = None,
-    ) -> NoReturn:
+    ) -> None:
         """
         Args:
             uri: Uri of the charm
@@ -250,7 +250,7 @@ class Stack(Component):
         self,
         stack_data: StackData,
         parent: "Stack" = None,
-    ) -> NoReturn:
+    ) -> None:
         super().__init__(parent)
         self.stack_name = stack_data.name
         self.data = stack_data
@@ -475,7 +475,7 @@ class Endpoint:
     joined by `:`. Example: \"mysql:db\"
     """
 
-    def __init__(self, endpoint: str, component: Component) -> NoReturn:
+    def __init__(self, endpoint: str, component: Component) -> None:
         """
         Args:
             endpoint: String with the following format:
@@ -509,14 +509,14 @@ class Endpoint:
 class ProviderEndpoint(Endpoint):
     """This class represents a Provider Endpoint"""
 
-    def __init__(self, endpoint: str, component: Component) -> NoReturn:
+    def __init__(self, endpoint: str, component: Component) -> None:
         super().__init__(endpoint, component)
 
 
 class RequirerEndpoint(Endpoint):
     """This class represents a Requirer Endpoint"""
 
-    def __init__(self, endpoint: str, component: Component) -> NoReturn:
+    def __init__(self, endpoint: str, component: Component) -> None:
         super().__init__(endpoint, component)
 
 
@@ -529,9 +529,7 @@ class Relation:
         - Requirer: The endpoint that requires the service
     """
 
-    def __init__(
-        self, provider: ProviderEndpoint, requirer: RequirerEndpoint
-    ) -> NoReturn:
+    def __init__(self, provider: ProviderEndpoint, requirer: RequirerEndpoint) -> None:
         """
         Args:
             provider: Provider endpoint of the relation

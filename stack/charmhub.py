@@ -1,13 +1,13 @@
 import os
 import subprocess
-from typing import Dict, NoReturn
+from typing import Dict
 
 
 from stack import CHARMHUB_CHANNELS, CHARMHUB_KEY, CHARMHUB_URI, JUJU_FOLDER, StackData
 import yaml
 
 
-def init() -> NoReturn:
+def init() -> None:
     subprocess.run(["mkdir", "-p", JUJU_FOLDER], check=True)
     subprocess.run(["touch", CHARMHUB_URI], check=True)
     stacks = None
@@ -33,7 +33,7 @@ class CharmHub:
             return yaml.safe_load(f)[CHARMHUB_KEY]
 
     @staticmethod
-    def _save_stacks(stacks: Dict) -> NoReturn:
+    def _save_stacks(stacks: Dict) -> None:
         file_content = None
         with open(CHARMHUB_URI, "r") as f:
             file_content = yaml.safe_load(f)

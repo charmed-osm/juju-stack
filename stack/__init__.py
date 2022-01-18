@@ -1,7 +1,7 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 import os
-from typing import Any, Dict, List, NoReturn
+from typing import Any, Dict, List
 
 
 COMPONENT_TYPES = ("stack", "charm")
@@ -17,7 +17,7 @@ JUJU_INSTANCES_KEY = "instances"
 class StackData(dict):
     """This class represents the data of a stack"""
 
-    def __init__(self, data: Dict[str, Any]) -> NoReturn:
+    def __init__(self, data: Dict[str, Any]) -> None:
         """
         Args:
             stack_name: Name of the stack to load
@@ -56,7 +56,7 @@ class StackData(dict):
         """Returns a dictionary with the requires endpoints"""
         return self["requires"] if "requires" in self else {}
 
-    def validate(self) -> NoReturn:
+    def validate(self) -> None:
         """Validate the current stack data"""
         # TODO: Implement validation of a stack
         pass

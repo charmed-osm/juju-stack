@@ -4,13 +4,13 @@
 name: website-lma
 description: "Website stack with LMA"
 components:
-  website:
-    stack: website
-  lma:
-    stack: lma
+  site:
+    charm: hello-kubecon
   ingress:
     charm: nginx-ingress-integrator
     units: 1
+  lma:
+    stack: lma
 relations:
-- provider: ingress:ingress
-  requirer: website:site-ingress
+  - provider: ingress:ingress
+    requirer: website:site-ingress

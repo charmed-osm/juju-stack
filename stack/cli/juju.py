@@ -69,7 +69,6 @@ def deploy(stack_uri: str, instance_name: str, instance: str, channel: str):
     """
     logger.debug("Deploying stack")
     current_model = get_current_model()
-
     stack_data = None
     if stack_uri.startswith(".") or "/" in stack_uri:
         # Local stack
@@ -161,11 +160,9 @@ def destroy(stack_instance, force, no_wait, destroy_storage):
 
 @click.command(options_metavar="[options]")
 @click.argument("stack_instance", metavar="<stack_instance>")
-@click.option(
-    "--model", "-m", metavar="<model>", help="Show the juju status of only one model"
-)
+@click.option("--relations", is_flag=True, help="Show relations information")
 @debug_option
-def status(stack_instance, model):
+def status(stack_instance, relations):
     """
     Get the status of a stack instance.
 
@@ -173,14 +170,15 @@ def status(stack_instance, model):
 
         stack_instance: Name of the stack.
                         Execute `juju-stack list` to see the existing instances.
+        relations: Flag to show the relations in the stack.
 
     """
     instances = load_instances()
     if stack_instance not in instances:
         logger.error("Stack instance {} does not exist.".format(stack_instance))
         return
-    components, apps, relations = juju.status(
-        stack_instance, instances[stack_instance], model=model
+    components, apps, relations_info = juju.status(
+        stack_instance, instances[stack_instance]
     )
     component_headers = ["Components", "Type", "Status"]
     apps_headers = [
@@ -195,7 +193,6 @@ def status(stack_instance, model):
         # "Cloud/Region",
         # "Controller",
     ]
-    relations_headers = ["Relation provider", "Requirer"]
     components_table = tabulate(
         [
             [
@@ -233,20 +230,26 @@ def status(stack_instance, model):
         tablefmt="plain",
         numalign="left",
     )
-    relations_table = tabulate(
-        [[relation["provider"], relation["requirer"]] for relation in relations],
-        headers=relations_headers,
-        tablefmt="plain",
-        numalign="left",
-    )
+
     for line in components_table.splitlines():
         logger.info(line)
     logger.info("")
     for line in units_table.splitlines():
         logger.info(line)
     logger.info("")
-    for line in relations_table.splitlines():
-        logger.info(line)
+    if relations:
+        relations_headers = ["Relation provider", "Requirer"]
+        relations_table = tabulate(
+            [
+                [relation["provider"], relation["requirer"]]
+                for relation in relations_info
+            ],
+            headers=relations_headers,
+            tablefmt="plain",
+            numalign="left",
+        )
+        for line in relations_table.splitlines():
+            logger.info(line)
 
 
 @click.command(options_metavar="[options]")

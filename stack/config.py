@@ -1,6 +1,6 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
-from typing import Dict, NoReturn
+from typing import Dict
 
 from stack import STACK_SEPARATOR, STACK_SEPARATOR_REPR
 
@@ -8,7 +8,7 @@ from stack import STACK_SEPARATOR, STACK_SEPARATOR_REPR
 class Config(dict):
     """This class represents the configuration of a stack"""
 
-    def __init__(self, config: Dict, current_model: str) -> NoReturn:
+    def __init__(self, config: Dict, current_model: str) -> None:
         """
         Args:
             config: Dictionary with the configuration of the stack

@@ -29,11 +29,10 @@ def load_stack_config(
     stack_path: str,
 ) -> dict:
     """Load the Stack Config file of a specific Stack"""
-    filename = "{}".format(stack_path)
-    if not os.path.isfile(filename):
-        return None
+    if not os.path.isfile(stack_path):
+        raise Exception(f"instance file {stack_path} not found.")
 
-    with open(filename) as file_stream:
+    with open(stack_path) as file_stream:
         return yaml.safe_load(file_stream)
 
 

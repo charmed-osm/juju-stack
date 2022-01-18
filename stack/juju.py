@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 import subprocess
 import time
-from typing import Any, Dict, NoReturn, Tuple
+from typing import Any, Dict, Tuple
 
 
 from stack import (
@@ -18,7 +18,7 @@ from stack.utils import register_instance
 import yaml
 
 
-def initialize() -> NoReturn:
+def initialize() -> None:
     subprocess.run(["mkdir", "-p", JUJU_FOLDER], check=True)
     subprocess.run(["touch", CHARMHUB_URI], check=True)
     stacks = None
@@ -62,9 +62,7 @@ def deploy_stack(
         )
 
 
-def destroy_stack(
-    instance: Dict[str, Any], force, no_wait, destroy_storage
-) -> NoReturn:
+def destroy_stack(instance: Dict[str, Any], force, no_wait, destroy_storage) -> None:
     """
     Destroy a stack
 
@@ -288,7 +286,7 @@ def _update_components_status(instance_name, components, apps):
             # unit["workload-status"] = _get_status_with_color(unit["workload-status"])
 
 
-def status(instance_name: str, instance: Dict[str, Any], model: str = None) -> Tuple:
+def status(instance_name: str, instance: Dict[str, Any]) -> Tuple:
     """
     Get the status of a stack instance
 

@@ -25,9 +25,9 @@ components:
     trust: true
     channel: edge
 relations:
-- requirer: prometheus:alertmanager
-  provider: alertmanager:alerting
-- provider: grafana:grafana-source
-  requirer: prometheus:grafana-source
-- provider: grafana:grafana-source
-  requirer: loki:grafana-source
+  - requirer: prometheus:alertmanager
+    provider: alertmanager:alerting
+  - provider: grafana:grafana-source
+    requirer: prometheus:grafana-source
+  - provider: grafana:grafana-source
+    requirer: loki:grafana-source

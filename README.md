@@ -65,7 +65,7 @@ In order to have a prototype that is extremely close to what it will look like w
 Let's register, upload and publish all the stacks.
 
 ```bash
-stacks="website lma website-lma"
+stacks="lma website-lma"
 for stack in $stacks; do
   charmcraft-stack register $stack
   charmcraft-stack upload $stack/
@@ -80,7 +80,7 @@ This example aims to showcase the ability of placing stacks in different models,
 First, we will deploy all the stack in one model.
 
 ```bash
-juju add-model all-in-one
+juju add-model website-lma
 juju-stack deploy website-lma supersite
 ```
 

@@ -13,4 +13,4 @@ components:
     stack: lma
 relations:
   - provider: ingress:ingress
-    requirer: website:site-ingress
+    requirer: site:ingress
